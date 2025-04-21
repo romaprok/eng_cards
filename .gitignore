@@ -1,1 +1,30 @@
+# Dependencies
+node_modules
+
+# Environment
+.env.local
+
+# Build output
+dist
+
+# Development
+*.log
+# npm debug logs
+npm-debug.log*
+# yarn debug logs
+yarn-debug.log*
+# yarn error logs
+yarn-error.log*
+
+# Cache
+.vite
+# General cache directory
+.cache
+# Temporary files created during development
+*.tmp
+
+# System Files
+.DS_Store
+
+# IDE
 .idea

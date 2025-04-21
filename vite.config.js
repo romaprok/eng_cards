@@ -1,7 +1,114 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
+// https://vitejs.dev/config/
+export default defineConfig(({ command, mode }) => {
+  // Load env file based on `mode` in the current working directory
+  const env = loadEnv(mode, process.cwd(), '')
+
+  return {
+    plugins: [
+      react({
+        // Enable React 19 features
+        jsxRuntime: 'automatic',
+        // Enable fast refresh
+        fastRefresh: true,
+        // Enable React Server Components (if needed)
+        babel: {
+          plugins: [
+            ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+          ]
+        }
+      })
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+        '@components': path.resolve(__dirname, './src/components'),
+        '@pages': path.resolve(__dirname, './src/pages'),
+        '@hooks': path.resolve(__dirname, './src/hooks'),
+        '@utils': path.resolve(__dirname, './src/utils'),
+        '@styles': path.resolve(__dirname, './src/styles'),
+        '@assets': path.resolve(__dirname, './src/assets'),
+        '@types': path.resolve(__dirname, './src/types'),
+        '@store': path.resolve(__dirname, './src/store'),
+        '@services': path.resolve(__dirname, './src/services')
+      }
+    },
+    css: {
+      modules: {
+        localsConvention: 'camelCase',
+        generateScopedName: '[name]__[local]__[hash:base64:5]'
+      },
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@import "./src/styles/variables.scss";`
+        }
+      }
+    },
+    server: {
+      port: 3000,
+      open: true,
+      hmr: {
+        overlay: true
+      }
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      target: 'esnext',
+      minify: 'esbuild',
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom']
+          }
+        }
+      },
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 1600,
+      // Add asset handling
+      assetsInlineLimit: 4096,
+      // Empty output directory before build
+      emptyOutDir: true
+    },
+    optimizeDeps: {
+      // Pre-bundle these dependencies
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        'axios',
+        'date-fns',
+        'lodash-es'
+      ],
+      // Exclude these from pre-bundling
+      exclude: [
+        '@types/*',
+        '*.css',
+        '*.scss'
+      ],
+      // Force dependency pre-bundling
+      force: true,
+      // Disable pre-bundling in production
+      disabled: mode === 'production',
+      // Cache directory for pre-bundled dependencies
+      cacheDir: 'node_modules/.vite',
+      // Options for esbuild
+      esbuildOptions: {
+        target: 'esnext',
+        supported: {
+          'top-level-await': true
+        }
+      }
+    },
+    // Add environment variable handling
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      // Expose env variables to the client
+      __APP_ENV__: JSON.stringify(env.APP_ENV)
+    }
+  }
 })
