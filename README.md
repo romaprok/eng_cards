@@ -27,3 +27,15 @@ current stack:
 - ci/cd
 - vercel
 - heroku
+
+## Future CI/CD Improvements
+
+- [ ] Add automated tests (unit/integration tests with Jest, React Testing Library)
+- [ ] Add end-to-end (E2E) tests (e.g., Cypress, Playwright)
+- [ ] Set up code coverage reporting and enforce thresholds
+- [ ] Implement security checks (e.g., npm audit, codeql)
+- [ ] Add performance budgets (e.g., Lighthouse CI)
+- [ ] Configure branch protection rules in GitHub
+- [ ] Set up notifications for failed builds/deploys (e.g., Slack, Discord)
+- [ ] Review and manage environment variables for all environments
+- [ ] Add manual approval steps for production deployments
