@@ -61,7 +61,6 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
-            'utils-vendor': ['lodash-es', 'date-fns', 'axios'],
           },
           // Better file naming for caching
           chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -77,7 +76,7 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       // Pre-bundle these dependencies
-      include: ['react', 'react-dom', 'react-router-dom', 'axios', 'date-fns', 'lodash-es'],
+      include: ['react', 'react-dom'],
       // Exclude these from pre-bundling
       exclude: ['@types/*', '*.css', '*.scss'],
       // Force dependency pre-bundling
