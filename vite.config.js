@@ -55,15 +55,21 @@ export default defineConfig(({ mode }) => {
       target: 'esnext',
       minify: 'esbuild',
       cssMinify: true,
+      reportCompressedSize: false, // Faster builds
+      chunkSizeWarningLimit: 1000, // Adjust warning threshold
       rollupOptions: {
         output: {
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
+            'utils-vendor': ['lodash-es', 'date-fns', 'axios'],
           },
+          // Better file naming for caching
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
         },
       },
       cssCodeSplit: true,
-      chunkSizeWarningLimit: 1600,
       // Add asset handling
       assetsInlineLimit: 4096,
       // Empty output directory before build
