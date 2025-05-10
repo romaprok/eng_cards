@@ -19,7 +19,7 @@ current stack:
 - zustand
 - react-query
 - tailwind
-- sccs  
+- sccs
 - react-testing-library
 - eslint
 - prettier

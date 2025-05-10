@@ -1,9 +1,10 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
 import path from 'path'
 
+import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from 'vite'
+
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory
   const env = loadEnv(mode, process.cwd(), '')
 
@@ -14,13 +15,7 @@ export default defineConfig(({ command, mode }) => {
         jsxRuntime: 'automatic',
         // Enable fast refresh
         fastRefresh: true,
-        // Enable React Server Components (if needed)
-        babel: {
-          plugins: [
-            ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
-          ]
-        }
-      })
+      }),
     ],
     resolve: {
       alias: {
@@ -33,26 +28,26 @@ export default defineConfig(({ command, mode }) => {
         '@assets': path.resolve(__dirname, './src/assets'),
         '@types': path.resolve(__dirname, './src/types'),
         '@store': path.resolve(__dirname, './src/store'),
-        '@services': path.resolve(__dirname, './src/services')
-      }
+        '@services': path.resolve(__dirname, './src/services'),
+      },
     },
     css: {
       modules: {
         localsConvention: 'camelCase',
-        generateScopedName: '[name]__[local]__[hash:base64:5]'
+        generateScopedName: '[name]__[local]__[hash:base64:5]',
       },
       preprocessorOptions: {
         scss: {
-          additionalData: `@import "./src/styles/variables.scss";`
-        }
-      }
+          additionalData: `@import "./src/styles/variables.scss";`,
+        },
+      },
     },
     server: {
       port: 3000,
       open: true,
       hmr: {
-        overlay: true
-      }
+        overlay: true,
+      },
     },
     build: {
       outDir: 'dist',
@@ -63,33 +58,22 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            'react-vendor': ['react', 'react-dom']
-          }
-        }
+            'react-vendor': ['react', 'react-dom'],
+          },
+        },
       },
       cssCodeSplit: true,
       chunkSizeWarningLimit: 1600,
       // Add asset handling
       assetsInlineLimit: 4096,
       // Empty output directory before build
-      emptyOutDir: true
+      emptyOutDir: true,
     },
     optimizeDeps: {
       // Pre-bundle these dependencies
-      include: [
-        'react',
-        'react-dom',
-        'react-router-dom',
-        'axios',
-        'date-fns',
-        'lodash-es'
-      ],
+      include: ['react', 'react-dom', 'react-router-dom', 'axios', 'date-fns', 'lodash-es'],
       // Exclude these from pre-bundling
-      exclude: [
-        '@types/*',
-        '*.css',
-        '*.scss'
-      ],
+      exclude: ['@types/*', '*.css', '*.scss'],
       // Force dependency pre-bundling
       force: true,
       // Disable pre-bundling in production
@@ -100,15 +84,15 @@ export default defineConfig(({ command, mode }) => {
       esbuildOptions: {
         target: 'esnext',
         supported: {
-          'top-level-await': true
-        }
-      }
+          'top-level-await': true,
+        },
+      },
     },
     // Add environment variable handling
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
       // Expose env variables to the client
-      __APP_ENV__: JSON.stringify(env.APP_ENV)
-    }
+      __APP_ENV__: JSON.stringify(env.APP_ENV),
+    },
   }
 })
