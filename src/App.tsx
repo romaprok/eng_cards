@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { usePlaylistStore } from './store/playlistStore'
-import styles from './App.module.scss'
+import styles from './app.module.scss'
 import type { Playlist } from './types/playlist'
 
 const App = (): JSX.Element => {
