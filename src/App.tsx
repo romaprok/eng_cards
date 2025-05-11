@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { usePlaylistStore } from './store/playlistStore'
 import styles from './App.module.scss'
+import type { Playlist } from './types/playlist'
 
 const App = (): JSX.Element => {
   const [playlistName, setPlaylistName] = useState('')
-  const playlists = usePlaylistStore(state => state.playlists)
-  const addPlaylist = usePlaylistStore(state => state.addPlaylist)
-  const removePlaylist = usePlaylistStore(state => state.removePlaylist)
+  const playlists = usePlaylistStore((state: { playlists: Playlist[] }) => state.playlists)
+  const addPlaylist = usePlaylistStore(
+    (state: { addPlaylist: (name: string) => void }) => state.addPlaylist
+  )
+  const removePlaylist = usePlaylistStore(
+    (state: { removePlaylist: (id: string) => void }) => state.removePlaylist
+  )
 
   const handleAddPlaylist = (e: React.FormEvent): void => {
     e.preventDefault()
@@ -35,7 +40,7 @@ const App = (): JSX.Element => {
         </form>
         <ul>
           {playlists.length === 0 && <li>No playlists yet. Add your first!</li>}
-          {playlists.map(playlist => (
+          {playlists.map((playlist: Playlist) => (
             <li
               key={playlist.id}
               style={{
