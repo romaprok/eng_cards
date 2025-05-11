@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "uuid": "^11.1.0",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -35,6 +37,7 @@
     "@types/jest": "^29.5.14",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "@vitejs/plugin-react": "^4.4.1",
