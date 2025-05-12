@@ -28,6 +28,28 @@ current stack:
 - vercel
 - heroku
 
+## Upcoming Features
+
+### Frontend (UI/UX)
+
+- [ ] User profile page with stats and settings
+- [ ] Create, edit, and delete vocabulary playlists
+- [ ] Add, edit, and remove cards in playlists
+- [ ] Flashcard learning mode (flip cards, self-check)
+- [ ] Quiz mode with scoring and progress tracking
+- [ ] Search and filter playlists and cards
+- [ ] Responsive mobile-first UI
+- [ ] Dark mode toggle
+
+### Data Persistence
+
+- [ ] Local storage integration for playlists and cards
+
+### Backend & Cloud (planned for later)
+
+- [ ] Sync data to cloud (optional backend integration)
+- [ ] User authentication (sign up, login, logout)
+
 ## Future CI/CD Improvements
 
 - [ ] Add automated tests (unit/integration tests with Jest, React Testing Library)
