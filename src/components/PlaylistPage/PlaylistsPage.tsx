@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import type { Playlist } from '@types/playlist.ts'
-import styles from '../../app.module.css'
+import styles from './PlaylistPage.module.css'
 
 const PlaylistsPage = (): JSX.Element => {
   const [playlistName, setPlaylistName] = useState('')
