@@ -15,7 +15,7 @@ function loadUser(): User {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored) as User
   } catch {
-    // Silent fail for localStorage errors
+    // Handle error if needed
   }
   return {
     username: 'User',
@@ -29,7 +29,7 @@ export const useUserStore = create<UserState>(set => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
     } catch {
-      // Silent fail for localStorage errors
+      // Handle error if needed
     }
   }
   return {

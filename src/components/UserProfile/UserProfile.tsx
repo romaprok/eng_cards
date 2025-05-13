@@ -1,7 +1,7 @@
 import { useRef, type ChangeEvent, type KeyboardEvent } from 'react'
 
-import { useUserStore } from '../store/userStore'
-import { usePlaylistStore } from '../store/playlistStore'
+import { useUserStore } from '@store/userStore.ts'
+import { usePlaylistStore } from '@store/playlistStore.ts'
 
 const DEFAULT_AVATAR_URL = 'https://ui-avatars.com/api/?name='
 

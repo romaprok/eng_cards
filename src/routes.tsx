@@ -1,5 +1,5 @@
-import UserProfile from './components/UserProfile'
-import PlaylistsPage from './components/PlaylistsPage'
+import UserProfile from '@components/UserProfile/UserProfile.tsx'
+import PlaylistsPage from '@components/PlaylistPage/PlaylistsPage.tsx'
 
 export const routes = [
   { path: '/', element: <PlaylistsPage /> },
