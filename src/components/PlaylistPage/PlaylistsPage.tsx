@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { usePlaylistStore } from '@store/playlistStore.ts'
-import type { Playlist } from '@types/playlist.ts'
-import styles from './PlaylistPage.module.css'
+import type { Playlist } from '@/types/playlist'
 
 const PlaylistsPage = (): JSX.Element => {
   const [playlistName, setPlaylistName] = useState('')
@@ -21,11 +20,9 @@ const PlaylistsPage = (): JSX.Element => {
   }
 
   return (
-    <div className={styles.appContainer + ' bg-gray-50 min-h-screen'}>
-      <section className={styles.playlistSection + ' bg-white'}>
-        <h2 className={styles.playlistTitle + ' text-3xl font-bold text-gray-900 mb-8'}>
-          Your Playlists
-        </h2>
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center p-8">
+      <section className="w-full max-w-xl rounded-xl shadow-lg p-8 mt-8 bg-white">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Your Playlists</h2>
         <form onSubmit={handleAddPlaylist} className="flex gap-4 mb-6">
           <input
             type="text"
@@ -43,7 +40,7 @@ const PlaylistsPage = (): JSX.Element => {
             Add
           </button>
         </form>
-        <ul className={styles.playlistList}>
+        <ul>
           {playlists.length === 0 && (
             <li className="text-gray-400">No playlists yet. Add your first!</li>
           )}
@@ -54,9 +51,7 @@ const PlaylistsPage = (): JSX.Element => {
             >
               <span className="text-lg font-medium text-gray-900">
                 {playlist.name}{' '}
-                <span className="cardCount text-gray-400 text-base">
-                  ({playlist.cards.length} cards)
-                </span>
+                <span className="text-gray-400 text-base">({playlist.cards.length} cards)</span>
               </span>
               <button
                 onClick={() => removePlaylist(playlist.id)}
