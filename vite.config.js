@@ -1,9 +1,9 @@
 import path from 'path'
 
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, loadEnv } from 'vite'
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory
   const env = loadEnv(mode, process.cwd(), '')
@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
         // Enable fast refresh
         fastRefresh: true,
       }),
+      tailwindcss(),
     ],
     resolve: {
       alias: {
