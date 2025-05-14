@@ -4,13 +4,10 @@ import type { Playlist } from '@/types/playlist'
 
 const PlaylistsPage = (): JSX.Element => {
   const [playlistName, setPlaylistName] = useState('')
-  const playlists = usePlaylistStore((state: { playlists: Playlist[] }) => state.playlists)
-  const addPlaylist = usePlaylistStore(
-    (state: { addPlaylist: (name: string) => void }) => state.addPlaylist
-  )
-  const removePlaylist = usePlaylistStore(
-    (state: { removePlaylist: (id: string) => void }) => state.removePlaylist
-  )
+
+  const playlists = usePlaylistStore(state => state.playlists)
+  const addPlaylist = usePlaylistStore(state => state.addPlaylist)
+  const removePlaylist = usePlaylistStore(state => state.removePlaylist)
 
   const handleAddPlaylist = (e: React.FormEvent): void => {
     e.preventDefault()
