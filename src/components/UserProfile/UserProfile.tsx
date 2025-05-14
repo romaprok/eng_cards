@@ -10,13 +10,13 @@ type UsernameChangeEvent = ChangeEvent<HTMLInputElement>
 type KeyboardButtonEvent = KeyboardEvent<HTMLButtonElement>
 
 const UserProfile = (): JSX.Element => {
-  const { user, setUsername, setAvatar, resetUser } = useUserStore(state => ({
-    user: state.user,
-    setUsername: state.setUsername,
-    setAvatar: state.setAvatar,
-    resetUser: state.resetUser,
-  }))
+  const user = useUserStore(state => state.user)
+  const setUsername = useUserStore(state => state.setUsername)
+  const setAvatar = useUserStore(state => state.setAvatar)
+  const resetUser = useUserStore(state => state.resetUser)
+
   const playlists = usePlaylistStore(state => state.playlists)
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleUsernameChange = (e: UsernameChangeEvent): void => {
