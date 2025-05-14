@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import type { Playlist } from '@/types/playlist'
 
@@ -46,10 +47,15 @@ const PlaylistsPage = (): JSX.Element => {
               key={playlist.id}
               className="py-4 border-b border-gray-200 flex items-center justify-between last:border-b-0"
             >
-              <span className="text-lg font-medium text-gray-900">
-                {playlist.name}{' '}
-                <span className="text-gray-400 text-base">({playlist.cards.length} cards)</span>
-              </span>
+              <Link
+                to={`/playlist/${playlist.id}`}
+                className="text-lg font-medium text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-300 rounded px-1"
+                aria-label={`View playlist ${playlist.name}`}
+                tabIndex={0}
+              >
+                {playlist.name}
+              </Link>
+              <span className="text-gray-400 text-base">({playlist.cards.length} cards)</span>
               <button
                 onClick={() => removePlaylist(playlist.id)}
                 aria-label={`Delete playlist ${playlist.name}`}
