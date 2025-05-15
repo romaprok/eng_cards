@@ -9,7 +9,7 @@ type AvatarChangeEvent = ChangeEvent<HTMLInputElement>
 type UsernameChangeEvent = ChangeEvent<HTMLInputElement>
 type KeyboardButtonEvent = KeyboardEvent<HTMLButtonElement>
 
-const UserProfile = (): JSX.Element => {
+const UserProfile = () => {
   const user = useUserStore(state => state.user)
   const setUsername = useUserStore(state => state.setUsername)
   const setAvatar = useUserStore(state => state.setAvatar)

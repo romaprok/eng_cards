@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import type { Playlist } from '@/types/playlist'
 
-const PlaylistsPage = (): JSX.Element => {
+const PlaylistsPage = () => {
   const [playlistName, setPlaylistName] = useState('')
 
   const playlists = usePlaylistStore(state => state.playlists)
