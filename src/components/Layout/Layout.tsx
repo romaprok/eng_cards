@@ -1,6 +1,6 @@
 import { Link, Outlet } from 'react-router-dom'
 
-const Layout = (): JSX.Element => (
+const Layout = () => (
   <div>
     <nav className="flex items-center justify-end p-4 bg-white shadow-md gap-4">
       <Link

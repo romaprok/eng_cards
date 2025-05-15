@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { routes } from './routes'
 import Layout from '@components/Layout/Layout.tsx'
 
-const App = (): JSX.Element => {
+const App = () => {
   return (
     <BrowserRouter>
       <Routes>

@@ -4,7 +4,7 @@ type BackArrowButtonProps = {
   pathTo: string
   buttonText: string
 }
-const BackArrowButton = ({ pathTo, buttonText }: BackArrowButtonProps): JSX.Element => {
+const BackArrowButton = ({ pathTo, buttonText }: BackArrowButtonProps) => {
   return (
     <Link
       to={pathTo}

@@ -1,16 +1,28 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import PlaylistEmptyPage from '@components/PlaylistsPage/PlaylistEmptyPage/PlaylistEmptyPage.tsx'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
 
-const PlaylistPage = (): JSX.Element => {
+const PlaylistPage = () => {
   const { id } = useParams<{ id: string }>()
   const playlist = usePlaylistStore(state => state.playlists.find(p => p.id === id))
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-8">
       <div className="container mx-auto min-h-auto">
-        <BackArrowButton pathTo="/" buttonText="Back to playlists" />
+        <div className="flex justify-between items-center mb-6">
+          <BackArrowButton pathTo="/" buttonText="Back to playlists" />
+          {playlist && (
+            <Link
+              to={`/playlist/${playlist.id}/add-word`}
+              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              aria-label="Add new word"
+              tabIndex={0}
+            >
+              Add Word
+            </Link>
+          )}
+        </div>
         {!playlist ? (
           <div className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Playlist not found</h2>
