@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import PlaylistEmptyPage from '@components/PlaylistsPage/PlaylistEmptyPage/PlaylistEmptyPage.tsx'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
@@ -6,6 +6,15 @@ import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
 const PlaylistPage = () => {
   const { id } = useParams<{ id: string }>()
   const playlist = usePlaylistStore(state => state.playlists.find(p => p.id === id))
+  const navigate = useNavigate()
+
+  const handleStartTrainingClick = () => {
+    if (playlist) navigate(`/playlist/${playlist.id}/training`)
+  }
+
+  const handleAddWordClick = () => {
+    if (playlist) navigate(`/playlist/${playlist.id}/add-word`)
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-8">
@@ -13,14 +22,26 @@ const PlaylistPage = () => {
         <div className="flex justify-between items-center mb-6">
           <BackArrowButton pathTo="/" buttonText="Back to playlists" />
           {playlist && (
-            <Link
-              to={`/playlist/${playlist.id}/add-word`}
-              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              aria-label="Add new word"
-              tabIndex={0}
-            >
-              Add Word
-            </Link>
+            <div className="flex gap-4">
+              <button
+                onClick={handleStartTrainingClick}
+                disabled={playlist.cards.length === 0}
+                className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+                  playlist.cards.length === 0
+                    ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+                title={playlist.cards.length === 0 ? 'Add at least one word to start training' : ''}
+              >
+                Start Training
+              </button>
+              <button
+                onClick={handleAddWordClick}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Add Word
+              </button>
+            </div>
           )}
         </div>
         {!playlist ? (
@@ -30,9 +51,11 @@ const PlaylistPage = () => {
           </div>
         ) : (
           <section className="w-full rounded-xl shadow-lg p-8 mt-8 bg-white">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">{playlist.name}</h2>
-            <div className="text-gray-600 mb-6">
-              {playlist.cards.length} word{playlist.cards.length !== 1 ? 's' : ''}
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">{playlist.name}</h2>
+              <div className="text-gray-600 mb-6">
+                {playlist.cards.length} word{playlist.cards.length !== 1 ? 's' : ''}
+              </div>
             </div>
             {playlist.cards.length === 0 ? (
               <PlaylistEmptyPage />
