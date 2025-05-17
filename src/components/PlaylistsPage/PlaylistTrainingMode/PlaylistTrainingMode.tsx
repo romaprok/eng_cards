@@ -21,6 +21,7 @@ const PlaylistTrainingMode = () => {
   const [score, setScore] = useState(0)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [shuffledCards, setShuffledCards] = useState<Card[]>([])
+  const [hasFlipped, setHasFlipped] = useState(false)
 
   useEffect(() => {
     if (playlist) {
@@ -29,6 +30,11 @@ const PlaylistTrainingMode = () => {
       setShuffledCards(shuffled)
     }
   }, [playlist])
+
+  useEffect(() => {
+    setIsFlipped(false)
+    setHasFlipped(false)
+  }, [currentCardIndex, currentMode])
 
   if (!playlist) {
     return (
@@ -89,6 +95,18 @@ const PlaylistTrainingMode = () => {
     }
   }
 
+  const handleLearnCardFlip = () => {
+    setIsFlipped(f => !f)
+    setHasFlipped(true)
+  }
+
+  const handleLearnCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleLearnCardFlip()
+    }
+  }
+
   const renderModeSelector = () => (
     <div className="flex gap-4 mb-8">
       <button
@@ -125,16 +143,41 @@ const PlaylistTrainingMode = () => {
   )
 
   const renderLearnMode = () => (
-    <div
-      className="bg-white rounded-xl shadow-lg p-8 cursor-pointer transform transition-transform duration-300 hover:scale-105"
-      onClick={() => setIsFlipped(!isFlipped)}
-    >
-      <div className="text-center">
-        <h3 className="text-2xl font-bold mb-4">{isFlipped ? 'Translation' : 'Word'}</h3>
-        <p className="text-3xl text-gray-800">
-          {isFlipped ? currentCard.translation : currentCard.word}
-        </p>
-        <p className="text-sm text-gray-500 mt-4">Click to flip</p>
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <div
+        className="w-[35rem] h-[25rem] cursor-pointer"
+        tabIndex={0}
+        aria-label={
+          isFlipped
+            ? `Show word for ${currentCard.translation}`
+            : `Show translation for ${currentCard.word}`
+        }
+        onClick={handleLearnCardFlip}
+        onKeyDown={handleLearnCardKeyDown}
+        style={{ perspective: '1000px' }}
+      >
+        <div
+          className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? 'rotate-y-180' : ''}`}
+        >
+          {/* Front Side */}
+          <div
+            className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
+            style={{ backfaceVisibility: 'hidden' }}
+          >
+            <h3 className="text-3xl font-bold mb-6">Word</h3>
+            <p className="text-5xl text-gray-800 font-semibold">{currentCard.word}</p>
+            <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
+          </div>
+          {/* Back Side */}
+          <div
+            className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-blue-50 shadow-2xl border border-blue-200 rotate-y-180 backface-hidden p-8"
+            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          >
+            <h3 className="text-3xl font-bold mb-6">Translation</h3>
+            <p className="text-5xl text-blue-700 font-semibold">{currentCard.translation}</p>
+            <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -235,10 +278,15 @@ const PlaylistTrainingMode = () => {
           </div>
           <button
             onClick={handleNext}
-            disabled={currentCardIndex === shuffledCards.length - 1}
+            disabled={
+              (currentMode === 'learn' && !hasFlipped) ||
+              (currentCardIndex === shuffledCards.length - 1 && currentMode !== 'learn')
+            }
             className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
           >
-            Next
+            {currentMode === 'learn' && currentCardIndex === shuffledCards.length - 1
+              ? 'Finish'
+              : 'Next'}
           </button>
         </div>
       </div>

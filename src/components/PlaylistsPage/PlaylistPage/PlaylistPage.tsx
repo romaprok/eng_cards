@@ -25,7 +25,13 @@ const PlaylistPage = () => {
             <div className="flex gap-4">
               <button
                 onClick={handleStartTrainingClick}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                disabled={playlist.cards.length === 0}
+                className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+                  playlist.cards.length === 0
+                    ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+                title={playlist.cards.length === 0 ? 'Add at least one word to start training' : ''}
               >
                 Start Training
               </button>
