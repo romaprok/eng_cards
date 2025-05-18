@@ -18,10 +18,14 @@ const PlaylistTrainingMode = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [userAnswer, setUserAnswer] = useState('')
-  const [score, setScore] = useState(0)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [shuffledCards, setShuffledCards] = useState<Card[]>([])
   const [hasFlipped, setHasFlipped] = useState(false)
+  const [animationDirection, setAnimationDirection] = useState<null | 'next' | 'prev'>(null)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [prevCardIndex, setPrevCardIndex] = useState<number | null>(null)
+  const [transitioningTo, setTransitioningTo] = useState<number | null>(null)
+  const [transitionStage, setTransitionStage] = useState<'idle' | 'start' | 'animating'>('idle')
 
   useEffect(() => {
     if (playlist) {
@@ -67,20 +71,50 @@ const PlaylistTrainingMode = () => {
   const currentCard = shuffledCards[currentCardIndex]
 
   const handleNext = () => {
-    if (currentCardIndex < shuffledCards.length - 1) {
-      setCurrentCardIndex(prev => prev + 1)
+    if (currentCardIndex < shuffledCards.length - 1 && !isAnimating) {
       setIsFlipped(false)
-      setUserAnswer('')
-      setIsCorrect(null)
+      setAnimationDirection('next')
+      setPrevCardIndex(currentCardIndex)
+      setTransitioningTo(currentCardIndex + 1)
+      setIsAnimating(true)
+      setTransitionStage('start')
+      requestAnimationFrame(() => {
+        setTransitionStage('animating')
+      })
+      setTimeout(() => {
+        setCurrentCardIndex(prev => prev + 1)
+        setUserAnswer('')
+        setIsCorrect(null)
+        setAnimationDirection(null)
+        setIsAnimating(false)
+        setPrevCardIndex(null)
+        setTransitioningTo(null)
+        setTransitionStage('idle')
+      }, 400)
     }
   }
 
   const handlePrevious = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1)
+    if (currentCardIndex > 0 && !isAnimating) {
       setIsFlipped(false)
-      setUserAnswer('')
-      setIsCorrect(null)
+      setAnimationDirection('prev')
+      setPrevCardIndex(currentCardIndex)
+      setTransitioningTo(currentCardIndex - 1)
+      setIsAnimating(true)
+      setTransitionStage('start')
+      requestAnimationFrame(() => {
+        setTransitionStage('animating')
+      })
+      setTimeout(() => {
+        setCurrentCardIndex(prev => prev - 1)
+        setUserAnswer('')
+        setIsCorrect(null)
+        setAnimationDirection(null)
+        setIsAnimating(false)
+        setPrevCardIndex(null)
+        setTransitioningTo(null)
+        setTransitionStage('idle')
+      }, 400)
     }
   }
 
@@ -89,9 +123,6 @@ const PlaylistTrainingMode = () => {
       const isAnswerCorrect =
         userAnswer.toLowerCase().trim() === currentCard.translation.toLowerCase().trim()
       setIsCorrect(isAnswerCorrect)
-      if (isAnswerCorrect) {
-        setScore(prev => prev + 1)
-      }
     }
   }
 
@@ -142,45 +173,191 @@ const PlaylistTrainingMode = () => {
     </div>
   )
 
-  const renderLearnMode = () => (
-    <div className="flex justify-center items-center min-h-[60vh]">
+  const renderLearnMode = () => {
+    const outgoingCard = prevCardIndex !== null ? shuffledCards[prevCardIndex] : null
+    const incomingCard = transitioningTo !== null ? shuffledCards[transitioningTo] : null
+    const showTransition = isAnimating && outgoingCard && incomingCard
+    return (
       <div
-        className="w-[35rem] h-[25rem] cursor-pointer"
-        tabIndex={0}
-        aria-label={
-          isFlipped
-            ? `Show word for ${currentCard.translation}`
-            : `Show translation for ${currentCard.word}`
-        }
-        onClick={handleLearnCardFlip}
-        onKeyDown={handleLearnCardKeyDown}
-        style={{ perspective: '1000px' }}
+        className="flex justify-center items-center min-h-[60vh] relative w-full"
+        style={{ maxWidth: '100vw' }}
       >
-        <div
-          className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? 'rotate-y-180' : ''}`}
-        >
-          {/* Front Side */}
-          <div
-            className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
-            style={{ backfaceVisibility: 'hidden' }}
-          >
-            <h3 className="text-3xl font-bold mb-6">Word</h3>
-            <p className="text-5xl text-gray-800 font-semibold">{currentCard.word}</p>
-            <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-          </div>
-          {/* Back Side */}
-          <div
-            className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-blue-50 shadow-2xl border border-blue-200 rotate-y-180 backface-hidden p-8"
-            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-          >
-            <h3 className="text-3xl font-bold mb-6">Translation</h3>
-            <p className="text-5xl text-blue-700 font-semibold">{currentCard.translation}</p>
-            <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-          </div>
+        <div className="relative w-[60rem] h-[25rem] overflow-visible flex items-center justify-center">
+          {/* Outgoing card (slide/fade out) */}
+          {showTransition && outgoingCard && (
+            <div
+              className={`absolute w-[35rem] h-[25rem] transition-all duration-400 ease-in-out z-10`}
+              style={{
+                left: '50%',
+                top: 0,
+                transform: `translateX(-50%) ${
+                  transitionStage === 'start'
+                    ? ''
+                    : animationDirection === 'next'
+                      ? 'translateX(0%)'
+                      : animationDirection === 'prev'
+                        ? 'translateX(0%)'
+                        : ''
+                }`,
+                opacity:
+                  transitionStage === 'start'
+                    ? 1
+                    : animationDirection === 'next' || animationDirection === 'prev'
+                      ? 0
+                      : 1,
+                transition:
+                  transitionStage === 'animating' ? 'transform 0.4s, opacity 0.4s' : 'none',
+                ...(transitionStage === 'animating' && animationDirection === 'next'
+                  ? { transform: 'translateX(-50%) translateX(-80%)', opacity: 0 }
+                  : {}),
+                ...(transitionStage === 'animating' && animationDirection === 'prev'
+                  ? { transform: 'translateX(-50%) translateX(80%)', opacity: 0 }
+                  : {}),
+              }}
+            >
+              <div
+                className="w-full h-full cursor-pointer"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ perspective: '1000px' }}
+              >
+                <div className="relative w-full h-full [transform-style:preserve-3d]">
+                  <div
+                    className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
+                    style={{ backfaceVisibility: 'hidden' }}
+                  >
+                    <h3 className="text-3xl font-bold mb-6">Word</h3>
+                    <p className="text-5xl text-gray-800 font-semibold">{outgoingCard.word}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Incoming card (slide/fade in) */}
+          {showTransition && incomingCard && (
+            <div
+              className={`absolute w-[35rem] h-[25rem] transition-all duration-400 ease-in-out z-20`}
+              style={{
+                left: '50%',
+                top: 0,
+                transform: `translateX(-50%) ${
+                  transitionStage === 'start'
+                    ? animationDirection === 'next'
+                      ? 'translateX(80%)'
+                      : animationDirection === 'prev'
+                        ? 'translateX(-80%)'
+                        : ''
+                    : ''
+                }`,
+                opacity: transitionStage === 'start' ? 0 : 1,
+                transition:
+                  transitionStage === 'animating' ? 'transform 0.4s, opacity 0.4s' : 'none',
+                ...(transitionStage === 'animating' && animationDirection === 'next'
+                  ? { transform: 'translateX(-50%) translateX(0%)', opacity: 1 }
+                  : {}),
+                ...(transitionStage === 'animating' && animationDirection === 'prev'
+                  ? { transform: 'translateX(-50%) translateX(0%)', opacity: 1 }
+                  : {}),
+              }}
+            >
+              <div
+                className="w-full h-full cursor-pointer"
+                tabIndex={0}
+                aria-label={
+                  isFlipped
+                    ? `Show word for ${incomingCard.translation}`
+                    : `Show translation for ${incomingCard.word}`
+                }
+                onClick={handleLearnCardFlip}
+                onKeyDown={handleLearnCardKeyDown}
+                style={{ perspective: '1000px' }}
+              >
+                <div
+                  className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? 'rotate-y-180' : ''}`}
+                >
+                  {/* Front Side */}
+                  <div
+                    className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
+                    style={{ backfaceVisibility: 'hidden' }}
+                  >
+                    <h3 className="text-3xl font-bold mb-6">Word</h3>
+                    <p className="text-5xl text-gray-800 font-semibold">{incomingCard.word}</p>
+                    <p className="text-base text-gray-500 mt-8">
+                      Click or press Enter/Space to flip
+                    </p>
+                  </div>
+                  {/* Back Side */}
+                  <div
+                    className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-blue-50 shadow-2xl border border-blue-200 rotate-y-180 backface-hidden p-8"
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                  >
+                    <h3 className="text-3xl font-bold mb-6">Translation</h3>
+                    <p className="text-5xl text-blue-700 font-semibold">
+                      {incomingCard.translation}
+                    </p>
+                    <p className="text-base text-gray-500 mt-8">
+                      Click or press Enter/Space to flip
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Default (no animation) */}
+          {!showTransition && (
+            <div
+              className="absolute w-[35rem] h-[25rem] z-20"
+              style={{ left: '50%', top: 0, transform: 'translateX(-50%)' }}
+            >
+              <div
+                className="w-full h-full cursor-pointer"
+                tabIndex={0}
+                aria-label={
+                  isFlipped
+                    ? `Show word for ${shuffledCards[currentCardIndex].translation}`
+                    : `Show translation for ${shuffledCards[currentCardIndex].word}`
+                }
+                onClick={handleLearnCardFlip}
+                onKeyDown={handleLearnCardKeyDown}
+                style={{ perspective: '1000px' }}
+              >
+                <div
+                  className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? 'rotate-y-180' : ''}`}
+                >
+                  {/* Front Side */}
+                  <div
+                    className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
+                    style={{ backfaceVisibility: 'hidden' }}
+                  >
+                    <h3 className="text-3xl font-bold mb-6">Word</h3>
+                    <p className="text-5xl text-gray-800 font-semibold">
+                      {shuffledCards[currentCardIndex].word}
+                    </p>
+                    <p className="text-base text-gray-500 mt-8">
+                      Click or press Enter/Space to flip
+                    </p>
+                  </div>
+                  {/* Back Side */}
+                  <div
+                    className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-blue-50 shadow-2xl border border-blue-200 rotate-y-180 backface-hidden p-8"
+                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                  >
+                    <h3 className="text-3xl font-bold mb-6">Translation</h3>
+                    <p className="text-5xl text-blue-700 font-semibold">
+                      {shuffledCards[currentCardIndex].translation}
+                    </p>
+                    <p className="text-base text-gray-500 mt-8">
+                      Click or press Enter/Space to flip
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const renderWriteMode = () => (
     <div className="bg-white rounded-xl shadow-lg p-8">
@@ -242,9 +419,6 @@ const PlaylistTrainingMode = () => {
   const handleAnswer = (answer: string) => {
     const isAnswerCorrect = answer === currentCard.translation
     setIsCorrect(isAnswerCorrect)
-    if (isAnswerCorrect) {
-      setScore(prev => prev + 1)
-    }
   }
 
   return (
@@ -252,9 +426,6 @@ const PlaylistTrainingMode = () => {
       <div className="container mx-auto min-h-auto">
         <div className="flex justify-between items-center mb-6">
           <BackArrowButton pathTo={`/playlist/${playlist.id}`} buttonText="Back to playlist" />
-          <div className="text-lg font-semibold">
-            Score: {score}/{currentCardIndex + 1}
-          </div>
         </div>
 
         {renderModeSelector()}
