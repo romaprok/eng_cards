@@ -2,10 +2,25 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import PlaylistEmptyPage from '@components/PlaylistsPage/PlaylistEmptyPage/PlaylistEmptyPage.tsx'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
+import type { CardStatus } from '@/types/playlist'
+
+const getStatusColor = (status: CardStatus) => {
+  switch (status) {
+    case 'new':
+      return 'bg-gray-100 text-gray-600'
+    case 'learning':
+      return 'bg-blue-100 text-blue-600'
+    case 'mastered':
+      return 'bg-green-100 text-green-600'
+    default:
+      return 'bg-gray-100 text-gray-600'
+  }
+}
 
 const PlaylistPage = () => {
   const { id } = useParams<{ id: string }>()
   const playlist = usePlaylistStore(state => state.playlists.find(p => p.id === id))
+  const getAvailableCards = usePlaylistStore(state => state.getAvailableCards)
   const navigate = useNavigate()
 
   const handleStartTrainingClick = () => {
@@ -16,31 +31,47 @@ const PlaylistPage = () => {
     if (playlist) navigate(`/playlist/${playlist.id}/add-word`)
   }
 
+  const availableCards = playlist ? getAvailableCards(playlist.id) : []
+  const hasAvailableCards = availableCards.length > 0
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 p-8">
       <div className="container mx-auto min-h-auto">
         <div className="flex justify-between items-center mb-6">
           <BackArrowButton pathTo="/" buttonText="Back to playlists" />
           {playlist && (
-            <div className="flex gap-4">
-              <button
-                onClick={handleStartTrainingClick}
-                disabled={playlist.cards.length === 0}
-                className={`px-4 py-2 rounded-md transition-colors duration-200 ${
-                  playlist.cards.length === 0
-                    ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-                title={playlist.cards.length === 0 ? 'Add at least one word to start training' : ''}
-              >
-                Start Training
-              </button>
-              <button
-                onClick={handleAddWordClick}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                Add Word
-              </button>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex gap-4">
+                <button
+                  onClick={handleStartTrainingClick}
+                  disabled={!hasAvailableCards}
+                  className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+                    !hasAvailableCards
+                      ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                  title={
+                    !hasAvailableCards
+                      ? 'No cards available for training. Add new cards or wait for review time to pass.'
+                      : ''
+                  }
+                >
+                  Start Training
+                </button>
+                <button
+                  onClick={handleAddWordClick}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Add Word
+                </button>
+              </div>
+              {playlist.cards.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  {hasAvailableCards
+                    ? `${availableCards.length} card${availableCards.length !== 1 ? 's' : ''} ready for review`
+                    : 'No cards ready for review'}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -63,7 +94,14 @@ const PlaylistPage = () => {
               <ul className="divide-y divide-gray-200">
                 {playlist.cards.map(card => (
                   <li key={card.id} className="py-4 flex justify-between items-center">
-                    <span className="text-lg text-gray-900">{card.word}</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-lg text-gray-900">{card.word}</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(card.status)}`}
+                      >
+                        {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+                      </span>
+                    </div>
                     <span className="text-gray-500">{card.translation}</span>
                   </li>
                 ))}
