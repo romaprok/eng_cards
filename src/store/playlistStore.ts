@@ -82,13 +82,7 @@ export const usePlaylistStore = create<PlaylistState>(
     getAvailableCards: (playlistId: string) => {
       const playlist = get().playlists.find(p => p.id === playlistId)
       if (!playlist) return []
-
-      const now = Date.now()
-      return playlist.cards.filter(card => {
-        if (card.status === 'new') return true
-        if (!card.nextReview) return true
-        return now >= card.nextReview
-      })
+      return playlist.cards
     },
   })
 )
