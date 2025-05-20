@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
 import { useState, useEffect } from 'react'
@@ -13,13 +13,14 @@ interface Card {
 
 const PlaylistTrainingMode = () => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const playlist = usePlaylistStore(state => state.playlists.find(p => p.id === id))
   const updateCardStatus = usePlaylistStore(state => state.updateCardStatus)
   const getAvailableCards = usePlaylistStore(state => state.getAvailableCards)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [shuffledCards, setShuffledCards] = useState<Card[]>([])
-  const [answeredCards, setAnsweredCards] = useState<Set<string>>(new Set())
+  const [shownCards, setShownCards] = useState<Set<string>>(new Set())
   const [isAnimating, setIsAnimating] = useState(false)
   const [prevCardIndex, setPrevCardIndex] = useState<number | null>(null)
   const [transitioningTo, setTransitioningTo] = useState<number | null>(null)
@@ -31,7 +32,7 @@ const PlaylistTrainingMode = () => {
       const shuffled = [...availableCards].sort(() => Math.random() - 0.5)
       setShuffledCards(shuffled)
       setCurrentCardIndex(0)
-      setAnsweredCards(new Set())
+      setShownCards(new Set())
     }
   }, [playlist, getAvailableCards])
 
@@ -78,62 +79,40 @@ const PlaylistTrainingMode = () => {
     }
   }
 
-  const handleKnowClick = () => {
+  const handleCardAction = (isKnown: boolean) => {
     if (!playlist) return
 
     const currentCard = shuffledCards[currentCardIndex]
-    const newStatus = currentCard.status === 'new' ? 'learning' : 'mastered'
-    updateCardStatus(playlist.id, currentCard.id, newStatus)
-    setAnsweredCards(prev => new Set([...prev, currentCard.id]))
 
-    if (answeredCards.size + 1 === shuffledCards.length) {
+    if (isKnown) {
+      const newStatus = currentCard.status === 'new' ? 'learning' : 'mastered'
+      updateCardStatus(playlist.id, currentCard.id, newStatus)
+    }
+
+    setShownCards(prev => new Set([...prev, currentCard.id]))
+
+    if (currentCardIndex + 1 >= shuffledCards.length) {
+      navigate(`/playlist/${playlist.id}`)
       return
     }
 
-    setPrevCardIndex(currentCardIndex)
-    setTransitioningTo(currentCardIndex + 1)
     setIsAnimating(true)
     setTransitionStage('start')
+    setPrevCardIndex(currentCardIndex)
+    setTransitioningTo(currentCardIndex + 1)
 
     requestAnimationFrame(() => {
       setTransitionStage('animating')
     })
 
     setTimeout(() => {
-      setCurrentCardIndex(prev => prev + 1)
+      setCurrentCardIndex(currentCardIndex + 1)
       setIsAnimating(false)
       setPrevCardIndex(null)
       setTransitioningTo(null)
       setTransitionStage('idle')
       setIsFlipped(false)
-    }, 500)
-  }
-
-  const handleDontKnowClick = () => {
-    const currentCard = shuffledCards[currentCardIndex]
-    setAnsweredCards(prev => new Set([...prev, currentCard.id]))
-
-    if (answeredCards.size + 1 === shuffledCards.length) {
-      return
-    }
-
-    setPrevCardIndex(currentCardIndex)
-    setTransitioningTo(currentCardIndex + 1)
-    setIsAnimating(true)
-    setTransitionStage('start')
-
-    requestAnimationFrame(() => {
-      setTransitionStage('animating')
-    })
-
-    setTimeout(() => {
-      setCurrentCardIndex(prev => prev + 1)
-      setIsAnimating(false)
-      setPrevCardIndex(null)
-      setTransitioningTo(null)
-      setTransitionStage('idle')
-      setIsFlipped(false)
-    }, 500)
+    }, 300)
   }
 
   const renderLearnMode = () => {
@@ -150,11 +129,9 @@ const PlaylistTrainingMode = () => {
               style={{
                 left: '50%',
                 top: 0,
-                transform: `translateX(-50%) ${
-                  transitionStage === 'start' ? 'translateX(100%)' : 'translateX(0%)'
-                }`,
+                transform: 'translateX(-50%)',
                 opacity: transitionStage === 'start' ? 0 : 1,
-                transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
+                transition: 'opacity 0.3s ease-in-out',
               }}
             >
               <div className="w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 p-8">
@@ -165,14 +142,14 @@ const PlaylistTrainingMode = () => {
             </div>
           )}
 
-          <div
-            className={`w-full h-full transition-all duration-500 ease-in-out`}
-            style={{
-              transform: `translateX(${transitionStage === 'start' ? '-100%' : '0%'})`,
-              opacity: transitionStage === 'start' ? 0 : 1,
-            }}
-          >
-            {!isAnimating ? (
+          {!isAnimating && (
+            <div
+              className="w-full h-full"
+              style={{
+                opacity: transitionStage === 'start' ? 0 : 1,
+                transition: 'opacity 0.3s ease-in-out',
+              }}
+            >
               <div
                 className="w-full h-full cursor-pointer"
                 tabIndex={0}
@@ -214,18 +191,8 @@ const PlaylistTrainingMode = () => {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 p-8">
-                <h3 className="text-3xl font-bold mb-6">{isFlipped ? 'Translation' : 'Word'}</h3>
-                <p
-                  className={`text-5xl font-semibold ${isFlipped ? 'text-blue-700' : 'text-gray-800'}`}
-                >
-                  {isFlipped ? currentCard.translation : currentCard.word}
-                </p>
-                <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="text-gray-600 text-lg font-medium mt-8">
@@ -235,13 +202,13 @@ const PlaylistTrainingMode = () => {
         {isFlipped && (
           <div className="flex gap-8 mt-8 px-8">
             <button
-              onClick={handleDontKnowClick}
+              onClick={() => handleCardAction(false)}
               className="px-8 py-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-lg font-medium"
             >
               Don't Know
             </button>
             <button
-              onClick={handleKnowClick}
+              onClick={() => handleCardAction(true)}
               className="px-8 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-lg font-medium"
             >
               Know
@@ -265,7 +232,7 @@ const PlaylistTrainingMode = () => {
     </div>
   )
 
-  if (answeredCards.size === shuffledCards.length && shuffledCards.length > 0) {
+  if (shownCards.size === shuffledCards.length && shuffledCards.length > 0) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50 p-8">
         <div className="container mx-auto min-h-auto">
