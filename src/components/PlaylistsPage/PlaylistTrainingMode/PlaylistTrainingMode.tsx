@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import type { CardStatus } from '@/types/playlist'
 import LearnMode from './LearnMode'
 import PlaylistTrainingModeEmptyState from '@components/PlaylistsPage/PlaylistTrainingMode/PlaylistTrainingModeEmptyState/PlaylistTrainingModeEmptyState.tsx'
@@ -23,10 +24,6 @@ const PlaylistTrainingMode = () => {
   const [isFlipped, setIsFlipped] = useState(false)
   const [shuffledCards, setShuffledCards] = useState<Card[]>([])
   const [shownCards, setShownCards] = useState<Set<string>>(new Set())
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [prevCardIndex, setPrevCardIndex] = useState<number | null>(null)
-  const [transitioningTo, setTransitioningTo] = useState<number | null>(null)
-  const [transitionStage, setTransitionStage] = useState<'idle' | 'start' | 'animating'>('idle')
 
   useEffect(() => {
     if (playlist) {
@@ -44,15 +41,25 @@ const PlaylistTrainingMode = () => {
 
   if (!playlist) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50 p-8">
+      <motion.div
+        className="flex flex-col min-h-screen bg-gray-50 p-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="container mx-auto min-h-auto">
           <BackArrowButton pathTo="/" buttonText="Back to playlists" />
-          <div className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center">
+          <motion.div
+            className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Playlist not found</h2>
             <p className="text-gray-500">The playlist you are looking for does not exist.</p>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
@@ -82,82 +89,113 @@ const PlaylistTrainingMode = () => {
     }
 
     setShownCards(prev => new Set([...prev, currentCard.id]))
-    // Save current state to card history
 
     if (currentCardIndex + 1 >= shuffledCards.length) {
       navigate(`/playlist/${playlist.id}`)
       return
     }
 
-    setIsAnimating(true)
-    setTransitionStage('start')
-    setPrevCardIndex(currentCardIndex)
-    setTransitioningTo(currentCardIndex + 1)
-
-    requestAnimationFrame(() => {
-      setTransitionStage('animating')
-    })
-
+    // Move to next card
     setTimeout(() => {
       setCurrentCardIndex(currentCardIndex + 1)
-      setIsAnimating(false)
-      setPrevCardIndex(null)
-      setTransitioningTo(null)
-      setTransitionStage('idle')
       setIsFlipped(false)
-    }, 300)
+    }, 200)
   }
 
   const renderCompletionMessage = () => (
-    <div className="flex flex-col items-center justify-center gap-6">
-      <h2 className="text-3xl font-bold text-gray-900">Training Complete!</h2>
-      <p className="text-xl text-gray-600">You've gone through all the cards in this playlist.</p>
-      <button
+    <motion.div
+      className="flex flex-col items-center justify-center gap-6"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, type: 'spring', stiffness: 200 }}
+    >
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-3xl font-bold text-gray-900 text-center">🎉 Training Complete!</h2>
+      </motion.div>
+      <motion.p
+        className="text-xl text-gray-600 text-center"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        You've gone through all the cards in this playlist.
+      </motion.p>
+      <motion.button
         onClick={() => (window.location.href = `/playlist/${playlist?.id}`)}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg"
+        whileHover={{ scale: 1.05, boxShadow: '0 10px 25px rgba(59, 130, 246, 0.3)' }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, type: 'spring', stiffness: 200 }}
       >
         Return to Playlist
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   )
 
   if (shownCards.size === shuffledCards.length && shuffledCards.length > 0) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50 p-8">
+      <motion.div
+        className="flex flex-col min-h-screen bg-gray-50 p-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="container mx-auto min-h-auto">
-          <div className="flex justify-between items-center mb-6">
+          <motion.div
+            className="flex justify-between items-center mb-6"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             <BackArrowButton pathTo={`/playlist/${playlist?.id}`} buttonText="Back to playlist" />
-          </div>
+          </motion.div>
           {renderCompletionMessage()}
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-8">
+    <motion.div
+      className="flex flex-col min-h-screen bg-gray-50 p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="container mx-auto min-h-auto">
-        <div className="flex justify-between items-center mb-6">
+        <motion.div
+          className="flex justify-between items-center mb-6"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
           <BackArrowButton pathTo={`/playlist/${playlist.id}`} buttonText="Back to playlist" />
-        </div>
+        </motion.div>
 
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <LearnMode
             currentCard={shuffledCards[currentCardIndex]}
             isFlipped={isFlipped}
             handleLearnCardFlip={handleLearnCardFlip}
             handleLearnCardKeyDown={handleLearnCardKeyDown}
-            isAnimating={isAnimating}
-            prevCardIndex={prevCardIndex}
-            transitioningTo={transitioningTo}
-            transitionStage={transitionStage}
             shuffledCards={shuffledCards}
             currentCardIndex={currentCardIndex}
             handleCardAction={handleCardAction}
           />
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

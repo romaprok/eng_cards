@@ -1,5 +1,7 @@
 import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { CardStatus } from '@/types/playlist'
+import AnimatedFlipCard from './AnimatedFlipCard'
 
 interface Card {
   id: string
@@ -13,10 +15,6 @@ interface LearnModeProps {
   isFlipped: boolean
   handleLearnCardFlip: () => void
   handleLearnCardKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void
-  isAnimating: boolean
-  prevCardIndex: number | null
-  transitioningTo: number | null
-  transitionStage: 'idle' | 'start' | 'animating'
   shuffledCards: Card[]
   currentCardIndex: number
   handleCardAction: (isKnown: boolean) => void
@@ -27,106 +25,115 @@ const LearnMode: React.FC<LearnModeProps> = ({
   isFlipped,
   handleLearnCardFlip,
   handleLearnCardKeyDown,
-  isAnimating,
-  prevCardIndex,
-  transitioningTo,
-  transitionStage,
   shuffledCards,
   currentCardIndex,
   handleCardAction,
 }) => {
-  const showTransition = isAnimating && prevCardIndex !== null && transitioningTo !== null
-  const incomingCard = showTransition ? shuffledCards[transitioningTo] : null
-
   return (
     <div className="relative flex flex-col items-center w-full">
-      <div className="relative w-[35rem] h-[25rem]">
-        {showTransition && incomingCard && (
-          <div
-            className="absolute w-[35rem] h-[25rem] z-20"
-            style={{
-              left: '50%',
-              top: 0,
-              transform: 'translateX(-50%)',
-              opacity: transitionStage === 'start' ? 0 : 1,
-              transition: 'opacity 0.3s ease-in-out',
-            }}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 p-8">
-              <h3 className="text-3xl font-bold mb-6">Word</h3>
-              <p className="text-5xl text-gray-800 font-semibold">{incomingCard.word}</p>
-              <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-            </div>
-          </div>
-        )}
-
-        {!isAnimating && (
-          <div
-            className="w-full h-full"
-            style={{
-              opacity: transitionStage === 'start' ? 0 : 1,
-              transition: 'opacity 0.3s ease-in-out',
-            }}
-          >
-            <div
-              className="w-full h-full cursor-pointer"
-              tabIndex={0}
-              aria-label={
-                isFlipped
-                  ? `Show word for ${currentCard.translation}`
-                  : `Show translation for ${currentCard.word}`
-              }
-              onClick={handleLearnCardFlip}
-              onKeyDown={handleLearnCardKeyDown}
-              style={{ perspective: '1000px' }}
-            >
-              <div
-                className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
-                  isFlipped ? 'rotate-y-180' : ''
-                }`}
-              >
-                <div
-                  className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-white shadow-2xl border border-gray-200 backface-hidden p-8"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <h3 className="text-3xl font-bold mb-6">Word</h3>
-                  <p className="text-5xl text-gray-800 font-semibold">{currentCard.word}</p>
-                  <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-                </div>
-                <div
-                  className="absolute w-full h-full flex flex-col items-center justify-center rounded-2xl bg-blue-50 shadow-2xl border border-blue-200 rotate-y-180 backface-hidden p-8"
-                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                >
-                  <h3 className="text-3xl font-bold mb-6">Translation</h3>
-                  <p className="text-5xl text-blue-700 font-semibold">{currentCard.translation}</p>
-                  <p className="text-base text-gray-500 mt-8">Click or press Enter/Space to flip</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Card Container */}
+      <div className="relative w-[35rem] h-[25rem] mb-8">
+        <AnimatedFlipCard
+          card={currentCard}
+          isFlipped={isFlipped}
+          onFlip={handleLearnCardFlip}
+          onKeyDown={handleLearnCardKeyDown}
+        />
       </div>
 
-      <div className="text-gray-600 text-lg font-medium mt-8">
-        {currentCardIndex + 1} of {shuffledCards.length}
-      </div>
+      {/* Progress indicator with animation */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="flex items-center gap-4">
+          <motion.div
+            className="text-gray-600 text-lg font-medium"
+            key={currentCardIndex}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            {currentCardIndex + 1} of {shuffledCards.length}
+          </motion.div>
 
-      {isFlipped && (
-        <div className="flex gap-8 mt-8 px-8 items-center">
-          <button
-            onClick={() => handleCardAction(false)}
-            className="px-8 py-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-lg font-medium"
-          >
-            Don't Know
-          </button>
-          <button
-            onClick={() => handleCardAction(true)}
-            className="px-8 py-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-lg font-medium"
-          >
-            Know
-          </button>
+          {/* Progress bar */}
+          <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
+              initial={{ width: 0 }}
+              animate={{
+                width: `${((currentCardIndex + 1) / shuffledCards.length) * 100}%`,
+              }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
         </div>
-      )}
+      </motion.div>
+
+      {/* Action buttons with enhanced animations */}
+      <AnimatePresence>
+        {isFlipped && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.9 }}
+            transition={{
+              duration: 0.3,
+              ease: [0.4, 0.0, 0.2, 1],
+              type: 'tween',
+            }}
+            className="flex gap-8 px-8 items-center"
+          >
+            <motion.button
+              onClick={() => handleCardAction(false)}
+              className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 text-lg font-medium shadow-lg"
+              whileHover={{
+                scale: 1.05,
+                boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              <span className="flex items-center gap-2">
+                <span>❌</span>
+                Don't Know
+              </span>
+            </motion.button>
+
+            <motion.button
+              onClick={() => handleCardAction(true)}
+              className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 text-lg font-medium shadow-lg"
+              whileHover={{
+                scale: 1.05,
+                boxShadow: '0 10px 25px rgba(34, 197, 94, 0.3)',
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              <span className="flex items-center gap-2">
+                <span>✅</span>
+                Know It
+              </span>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Keyboard shortcuts hint */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 0.5 }}
+        className="mt-8 text-center text-gray-500 text-sm"
+      >
+        <p>
+          💡 Tip: Use <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Space</kbd> or{' '}
+          <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Enter</kbd> to flip cards
+        </p>
+      </motion.div>
     </div>
   )
 }
