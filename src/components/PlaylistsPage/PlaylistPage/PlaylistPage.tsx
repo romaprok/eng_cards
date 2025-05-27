@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import PlaylistEmptyPage from '@components/PlaylistsPage/PlaylistEmptyPage/PlaylistEmptyPage.tsx'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
+import PerformanceStats from './PerformanceStats'
 import type { CardStatus } from '@/types/playlist'
 
 const getStatusColor = (status: CardStatus) => {
@@ -24,11 +25,11 @@ const PlaylistPage = () => {
   const navigate = useNavigate()
 
   const handleStartTrainingClick = () => {
-    if (playlist) navigate(`/playlist/${playlist.id}/training`)
+    if (playlist) void navigate(`/playlist/${playlist.id}/training`)
   }
 
   const handleAddWordClick = () => {
-    if (playlist) navigate(`/playlist/${playlist.id}/add-word`)
+    if (playlist) void navigate(`/playlist/${playlist.id}/add-word`)
   }
 
   const availableCards = playlist ? getAvailableCards(playlist.id) : []
@@ -75,39 +76,60 @@ const PlaylistPage = () => {
             </div>
           )}
         </div>
+
         {!playlist ? (
           <div className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Playlist not found</h2>
             <p className="text-gray-500">The playlist you are looking for does not exist.</p>
           </div>
         ) : (
-          <section className="w-full rounded-xl shadow-lg p-8 mt-8 bg-white">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">{playlist.name}</h2>
-              <div className="text-gray-600 mb-6">
-                {playlist.cards.length} word{playlist.cards.length !== 1 ? 's' : ''}
+          <>
+            {/* Performance Statistics */}
+            <PerformanceStats cards={playlist.cards} />
+
+            <section className="w-full rounded-xl shadow-lg p-8 bg-white">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">{playlist.name}</h2>
+                <div className="text-gray-600 mb-6">
+                  {playlist.cards.length} word{playlist.cards.length !== 1 ? 's' : ''}
+                </div>
               </div>
-            </div>
-            {playlist.cards.length === 0 ? (
-              <PlaylistEmptyPage />
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {playlist.cards.map(card => (
-                  <li key={card.id} className="py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <span className="text-lg text-gray-900">{card.word}</span>
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(card.status)}`}
-                      >
-                        {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
-                      </span>
-                    </div>
-                    <span className="text-gray-500">{card.translation}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+              {playlist.cards.length === 0 ? (
+                <PlaylistEmptyPage />
+              ) : (
+                <ul className="divide-y divide-gray-200">
+                  {playlist.cards.map(card => {
+                    // Ensure card has SM-2 fields for display
+                    const displayCard = {
+                      ...card,
+                      successRate: card.successRate || 0,
+                      totalReviews: card.totalReviews || 0,
+                    }
+
+                    return (
+                      <li key={card.id} className="py-4 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <span className="text-lg text-gray-900">{card.word}</span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-sm font-medium ${getStatusColor(card.status)}`}
+                          >
+                            {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+                          </span>
+                          {displayCard.totalReviews > 0 && (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {displayCard.successRate.toFixed(0)}% ({displayCard.totalReviews}{' '}
+                              reviews)
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-gray-500">{card.translation}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+          </>
         )}
       </div>
     </div>

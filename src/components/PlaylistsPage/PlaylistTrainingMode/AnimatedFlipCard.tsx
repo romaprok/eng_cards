@@ -6,6 +6,12 @@ interface Card {
   word: string
   translation: string
   status: CardStatus
+  easeFactor?: number
+  interval?: number
+  repetitions?: number
+  totalReviews?: number
+  correctReviews?: number
+  successRate?: number
 }
 
 interface AnimatedFlipCardProps {

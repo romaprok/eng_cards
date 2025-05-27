@@ -31,7 +31,7 @@ const AddWordPage = () => {
       translation: translation.trim(),
     })
 
-    navigate(`/playlist/${playlist.id}`)
+    void navigate(`/playlist/${playlist.id}`)
   }
 
   if (!playlist) {
