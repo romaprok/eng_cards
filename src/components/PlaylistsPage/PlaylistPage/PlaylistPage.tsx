@@ -1,4 +1,3 @@
-import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import PlaylistEmptyPage from '@components/PlaylistsPage/PlaylistEmptyPage/PlaylistEmptyPage.tsx'
@@ -26,11 +25,11 @@ const PlaylistPage = () => {
   const navigate = useNavigate()
 
   const handleStartTrainingClick = () => {
-    if (playlist) navigate(`/playlist/${playlist.id}/training`)
+    if (playlist) void navigate(`/playlist/${playlist.id}/training`)
   }
 
   const handleAddWordClick = () => {
-    if (playlist) navigate(`/playlist/${playlist.id}/add-word`)
+    if (playlist) void navigate(`/playlist/${playlist.id}/add-word`)
   }
 
   const availableCards = playlist ? getAvailableCards(playlist.id) : []

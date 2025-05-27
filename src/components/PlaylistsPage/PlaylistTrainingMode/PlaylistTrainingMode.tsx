@@ -39,7 +39,7 @@ const PlaylistTrainingMode = () => {
       setCurrentCardIndex(0)
       setShownCards(new Set())
     }
-  }, [playlist?.id, getAvailableCards])
+  }, [playlist?.id])
 
   useEffect(() => {
     setIsFlipped(false)
@@ -68,7 +68,7 @@ const PlaylistTrainingMode = () => {
       setShownCards(prev => new Set([...prev, currentCard.id]))
 
       if (currentCardIndex + 1 >= shuffledCards.length) {
-        navigate(`/playlist/${playlist.id}`)
+        void navigate(`/playlist/${playlist.id}`)
         return
       }
 

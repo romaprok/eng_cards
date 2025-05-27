@@ -68,9 +68,7 @@ const PerformanceStats: React.FC<PerformanceStatsProps> = ({ cards }) => {
         {stats.totalReviews > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Success Rate:</span>
-            <span className="text-lg font-bold text-green-600">
-              {stats.overallSuccessRate}%
-            </span>
+            <span className="text-lg font-bold text-green-600">{stats.overallSuccessRate}%</span>
           </div>
         )}
       </div>
@@ -102,7 +100,11 @@ const PerformanceStats: React.FC<PerformanceStatsProps> = ({ cards }) => {
             <span>Total Reviews: {stats.totalReviews}</span>
             <span>•</span>
             <span>
-              Accuracy: {stats.totalReviews > 0 ? Math.round((stats.overallSuccessRate / 100) * stats.totalReviews) : 0} / {stats.totalReviews}
+              Accuracy:{' '}
+              {stats.totalReviews > 0
+                ? Math.round((stats.overallSuccessRate / 100) * stats.totalReviews)
+                : 0}{' '}
+              / {stats.totalReviews}
             </span>
           </div>
         </motion.div>
@@ -111,4 +113,4 @@ const PerformanceStats: React.FC<PerformanceStatsProps> = ({ cards }) => {
   )
 }
 
-export default PerformanceStats 
+export default PerformanceStats
