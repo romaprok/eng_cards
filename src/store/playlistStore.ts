@@ -1,9 +1,29 @@
 import { create } from 'zustand'
-import type { Playlist, Card, CardStatus } from '../types/playlist'
+import type { Playlist, Card, CardStatus, DifficultyRating } from '../types/playlist'
 import { v4 as uuidv4 } from 'uuid'
+import { calculateNextReview, initializeCard, getAvailableCards as getAvailableCardsUtil } from '../utils/spacedRepetition'
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000
+
+// Migration function to add SM-2 fields to existing cards
+const migrateCard = (card: any): Card => {
+  // If card already has SM-2 fields, return as is
+  if (typeof card.easeFactor === 'number') {
+    return card as Card
+  }
+  
+  // Migrate old card to new format
+  return {
+    ...card,
+    easeFactor: 2.5,
+    interval: card.status === 'new' ? 0 : card.status === 'learning' ? 1 : 6,
+    repetitions: card.status === 'new' ? 0 : card.status === 'learning' ? 1 : 3,
+    totalReviews: 0,
+    correctReviews: 0,
+    successRate: 0,
+  }
+}
 
 interface PlaylistState {
   playlists: Playlist[]
@@ -11,10 +31,12 @@ interface PlaylistState {
   removePlaylist: (id: string) => void
   addCardToPlaylist: (
     playlistId: string,
-    card: Omit<Card, 'id' | 'status' | 'lastSeen' | 'nextReview'>
+    card: Omit<Card, 'id' | 'status' | 'lastSeen' | 'nextReview' | 'easeFactor' | 'interval' | 'repetitions' | 'totalReviews' | 'correctReviews' | 'successRate'>
   ) => void
+  updateCardWithRating: (playlistId: string, cardId: string, rating: DifficultyRating) => void
   updateCardStatus: (playlistId: string, cardId: string, status: CardStatus) => void
   getAvailableCards: (playlistId: string) => Card[]
+  migrateCards: () => void
 }
 
 export const usePlaylistStore = create<PlaylistState>(
@@ -30,7 +52,7 @@ export const usePlaylistStore = create<PlaylistState>(
       })),
     addCardToPlaylist: (
       playlistId: string,
-      card: Omit<Card, 'id' | 'status' | 'lastSeen' | 'nextReview'>
+      card: Omit<Card, 'id' | 'status' | 'lastSeen' | 'nextReview' | 'easeFactor' | 'interval' | 'repetitions' | 'totalReviews' | 'correctReviews' | 'successRate'>
     ) =>
       set((state: PlaylistState) => ({
         playlists: state.playlists.map((p: Playlist) =>
@@ -40,13 +62,26 @@ export const usePlaylistStore = create<PlaylistState>(
                 cards: [
                   ...p.cards,
                   {
-                    ...card,
+                    ...initializeCard(card),
                     id: uuidv4(),
-                    status: 'new',
-                    lastSeen: null,
-                    nextReview: null,
                   },
                 ],
+              }
+            : p
+        ),
+      })),
+    updateCardWithRating: (playlistId: string, cardId: string, rating: DifficultyRating) =>
+      set((state: PlaylistState) => ({
+        playlists: state.playlists.map((p: Playlist) =>
+          p.id === playlistId
+            ? {
+                ...p,
+                cards: p.cards.map((c: Card) => {
+                  if (c.id !== cardId) return c
+                  const migratedCard = migrateCard(c)
+                  const updates = calculateNextReview(migratedCard, rating)
+                  return { ...migratedCard, ...updates }
+                }),
               }
             : p
         ),
@@ -69,7 +104,7 @@ export const usePlaylistStore = create<PlaylistState>(
                         : null
 
                   return {
-                    ...c,
+                    ...migrateCard(c),
                     status,
                     lastSeen: now,
                     nextReview,
@@ -82,7 +117,16 @@ export const usePlaylistStore = create<PlaylistState>(
     getAvailableCards: (playlistId: string) => {
       const playlist = get().playlists.find(p => p.id === playlistId)
       if (!playlist) return []
-      return playlist.cards
+      // Migrate cards on the fly when getting available cards
+      const migratedCards = playlist.cards.map(migrateCard)
+      return getAvailableCardsUtil(migratedCards)
     },
+    migrateCards: () =>
+      set((state: PlaylistState) => ({
+        playlists: state.playlists.map((p: Playlist) => ({
+          ...p,
+          cards: p.cards.map(migrateCard),
+        })),
+      })),
   })
 )
