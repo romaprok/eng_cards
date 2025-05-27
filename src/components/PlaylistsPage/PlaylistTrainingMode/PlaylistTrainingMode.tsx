@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlaylistStore } from '@store/playlistStore.ts'
 import BackArrowButton from '@components/BackArrowButton/BackArrowButton.tsx'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import type { CardStatus } from '@/types/playlist'
+import type { CardStatus, DifficultyRating } from '@/types/playlist'
 import LearnMode from './LearnMode'
 import PlaylistTrainingModeEmptyState from '@components/PlaylistsPage/PlaylistTrainingMode/PlaylistTrainingModeEmptyState/PlaylistTrainingModeEmptyState.tsx'
 
@@ -12,13 +12,19 @@ interface Card {
   word: string
   translation: string
   status: CardStatus
+  easeFactor?: number
+  interval?: number
+  repetitions?: number
+  totalReviews?: number
+  correctReviews?: number
+  successRate?: number
 }
 
 const PlaylistTrainingMode = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const playlist = usePlaylistStore(state => state.playlists.find(p => p.id === id))
-  const updateCardStatus = usePlaylistStore(state => state.updateCardStatus)
+  const updateCardWithRating = usePlaylistStore(state => state.updateCardWithRating)
   const getAvailableCards = usePlaylistStore(state => state.getAvailableCards)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -33,39 +39,11 @@ const PlaylistTrainingMode = () => {
       setCurrentCardIndex(0)
       setShownCards(new Set())
     }
-  }, [playlist, getAvailableCards])
+  }, [playlist?.id, getAvailableCards])
 
   useEffect(() => {
     setIsFlipped(false)
   }, [currentCardIndex])
-
-  if (!playlist) {
-    return (
-      <motion.div
-        className="flex flex-col min-h-screen bg-gray-50 p-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="container mx-auto min-h-auto">
-          <BackArrowButton pathTo="/" buttonText="Back to playlists" />
-          <motion.div
-            className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Playlist not found</h2>
-            <p className="text-gray-500">The playlist you are looking for does not exist.</p>
-          </motion.div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  if (shuffledCards.length === 0) {
-    return <PlaylistTrainingModeEmptyState playlistId={playlist.id} />
-  }
 
   const handleLearnCardFlip = () => {
     setIsFlipped(f => !f)
@@ -78,29 +56,59 @@ const PlaylistTrainingMode = () => {
     }
   }
 
-  const handleCardAction = (isKnown: boolean) => {
-    if (!playlist) return
+  const handleCardAction = useCallback(
+    (rating: DifficultyRating) => {
+      if (!playlist) return
 
-    const currentCard = shuffledCards[currentCardIndex]
+      const currentCard = shuffledCards[currentCardIndex]
 
-    if (isKnown) {
-      const newStatus = currentCard.status === 'new' ? 'learning' : 'mastered'
-      updateCardStatus(playlist.id, currentCard.id, newStatus)
+      // Update card using SM-2 algorithm
+      updateCardWithRating(playlist.id, currentCard.id, rating)
+
+      setShownCards(prev => new Set([...prev, currentCard.id]))
+
+      if (currentCardIndex + 1 >= shuffledCards.length) {
+        navigate(`/playlist/${playlist.id}`)
+        return
+      }
+
+      // Move to next card
+      setTimeout(() => {
+        setCurrentCardIndex(currentCardIndex + 1)
+        setIsFlipped(false)
+      }, 200)
+    },
+    [playlist, shuffledCards, currentCardIndex, updateCardWithRating, navigate]
+  )
+
+  // Add keyboard shortcuts for rating buttons
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFlipped) return
+
+      switch (e.key) {
+        case '1':
+          e.preventDefault()
+          handleCardAction('again')
+          break
+        case '2':
+          e.preventDefault()
+          handleCardAction('hard')
+          break
+        case '3':
+          e.preventDefault()
+          handleCardAction('good')
+          break
+        case '4':
+          e.preventDefault()
+          handleCardAction('easy')
+          break
+      }
     }
 
-    setShownCards(prev => new Set([...prev, currentCard.id]))
-
-    if (currentCardIndex + 1 >= shuffledCards.length) {
-      navigate(`/playlist/${playlist.id}`)
-      return
-    }
-
-    // Move to next card
-    setTimeout(() => {
-      setCurrentCardIndex(currentCardIndex + 1)
-      setIsFlipped(false)
-    }, 200)
-  }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isFlipped, handleCardAction])
 
   const renderCompletionMessage = () => (
     <motion.div
@@ -137,6 +145,34 @@ const PlaylistTrainingMode = () => {
       </motion.button>
     </motion.div>
   )
+
+  if (!playlist) {
+    return (
+      <motion.div
+        className="flex flex-col min-h-screen bg-gray-50 p-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="container mx-auto min-h-auto">
+          <BackArrowButton pathTo="/" buttonText="Back to playlists" />
+          <motion.div
+            className="bg-white rounded-xl shadow-lg p-8 mt-8 text-center"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Playlist not found</h2>
+            <p className="text-gray-500">The playlist you are looking for does not exist.</p>
+          </motion.div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  if (shuffledCards.length === 0) {
+    return <PlaylistTrainingModeEmptyState playlistId={playlist.id} />
+  }
 
   if (shownCards.size === shuffledCards.length && shuffledCards.length > 0) {
     return (
