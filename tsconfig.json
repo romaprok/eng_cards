@@ -36,7 +36,9 @@
       "@assets/*": ["src/assets/*"],
       "@types/*": ["src/types/*"],
       "@store/*": ["src/store/*"],
-      "@services/*": ["src/services/*"]
+      "@services/*": ["src/services/*"],
+      "@constants/*": ["src/constants/*"],
+      "@config/*": ["src/config/*"]
     }
   },
   "include": ["src"],

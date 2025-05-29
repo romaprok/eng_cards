@@ -1,0 +1,5 @@
+export { default as PlaylistsPage } from './PlaylistsPage'
+export { default as PlaylistPage } from './PlaylistPage'
+export { default as AddWordPage } from './AddWordPage'
+export { default as PlaylistTrainingPage } from './PlaylistTrainingPage'
+export { default as UserProfilePage } from './UserProfilePage'
