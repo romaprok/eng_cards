@@ -3,6 +3,20 @@ import { Link, Outlet } from 'react-router-dom'
 import { useTheme } from '@/hooks/useTheme'
 import ThemeSettings from '@/components/ThemeSettings/ThemeSettings'
 
+interface NavLinkProps {
+  to: string
+  children: React.ReactNode
+}
+
+const NavLink = ({ to, children }: NavLinkProps) => (
+  <Link
+    to={to}
+    className="text-lg font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 transition-colors px-3 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+  >
+    {children}
+  </Link>
+)
+
 const Layout = () => {
   const [isThemeSettingsOpen, setIsThemeSettingsOpen] = useState(false)
 
@@ -13,27 +27,12 @@ const Layout = () => {
     <div className="min-h-screen bg-background text-primary">
       <nav className="flex items-center justify-between p-4 bg-surface shadow-md">
         <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="text-lg font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 transition-colors px-3 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            🎓 Eng Cards
-          </Link>
+          <NavLink to="/">🎓 Eng Cards</NavLink>
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="text-lg font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 transition-colors px-3 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            Home
-          </Link>
-          <Link
-            to="/profile"
-            className="text-lg font-semibold text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100 transition-colors px-3 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            Profile
-          </Link>
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/profile">Profile</NavLink>
 
           {/* Theme Settings Button */}
           <button
